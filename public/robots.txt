@@ -1,0 +1,19 @@
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /profile
+Disallow: /login
+Disallow: /register
+Disallow: /forgot-password
+Disallow: /reset-password
+Disallow: /cart
+Disallow: /checkout
+Disallow: /payment-success
+Disallow: /payment-failed
+Disallow: /track-order
+Disallow: /track-repair
+Disallow: /repair/booking
+Disallow: /repair/manual-quote
+Disallow: /repair/booking-success
+
+Sitemap: https://www.jamsmarttech.com/sitemap.xml

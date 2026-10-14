@@ -188,7 +188,7 @@ const Footer = () => {
               <h3 id="footer-contact-title">{f("contactTitle")}</h3>
             </div>
             <div className="site-footer__contact-list">
-              <a href="mailto:support@jamsmarttech.com">
+              <a href="mailto:jamsmarttech@gmail.com">
                 <span><Mail size={17} /></span>
                 <div><small>{f("emailLabel")}</small><strong>{f("email")}</strong></div>
               </a>

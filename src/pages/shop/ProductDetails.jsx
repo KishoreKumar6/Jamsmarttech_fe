@@ -12,6 +12,7 @@ import ErrorState from "../../components/common/ErrorState.jsx";
 import StarRating from "../../components/common/StarRating.jsx";
 import PriceTag, { formatPrice } from "../../components/common/PriceTag.jsx";
 import ProductCard from "../../components/ecommerce/ProductCard.jsx";
+import Seo from "../../components/common/Seo.jsx";
 
 const ProductDetails = () => {
   const { t } = useTranslation("shop");
@@ -103,6 +104,9 @@ const ProductDetails = () => {
     ? (selectedVariant.discountPrice && selectedVariant.discountPrice < selectedVariant.price ? selectedVariant.discountPrice : selectedVariant.price)
     : (product.salePrice && product.salePrice < product.regularPrice ? product.salePrice : product.regularPrice);
   const images = selectedVariant?.images?.length ? selectedVariant.images : product.images;
+  const seoImage = images?.[0] || `${window.location.origin}/icon-192.png`;
+  const seoPrice = Number(activePrice || 0);
+  const productDescription = product.shortDescription || product.description || `${product.title} from JAM Smart Tech.`;
 
   const handleAddToCart = () => {
     addItem({
@@ -185,6 +189,34 @@ const ProductDetails = () => {
 
   return (
     <div className="container-px section-y mx-auto max-w-6xl">
+      <Seo
+        title={`${product.title} | JAM Smart Tech`}
+        description={productDescription.slice(0, 155)}
+        type="product"
+        image={seoImage}
+        structuredData={{
+          "@type": "Product",
+          name: product.title,
+          description: productDescription,
+          image: images || [],
+          sku: product.sku || product._id,
+          brand: product.brand?.name ? { "@type": "Brand", name: product.brand.name } : undefined,
+          offers: {
+            "@type": "Offer",
+            url: `${window.location.origin}/product/${slug}`,
+            priceCurrency: product.currency || "EUR",
+            price: seoPrice.toFixed(2),
+            availability: activeStock > 0 ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
+          },
+          ...(summaryTotal > 0 && summaryAverage > 0 ? {
+            aggregateRating: {
+              "@type": "AggregateRating",
+              ratingValue: Number(summaryAverage).toFixed(1),
+              reviewCount: summaryTotal,
+            },
+          } : {}),
+        }}
+      />
       <div className="grid gap-10 lg:grid-cols-2">
         <div>
           <div className="mb-3 aspect-square overflow-hidden rounded-2xl bg-gray-50">
