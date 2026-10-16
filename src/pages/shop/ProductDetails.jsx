@@ -225,7 +225,7 @@ const ProductDetails = () => {
           <div className="flex gap-2">
             {images?.map((img, i) => (
               <button key={i} onClick={() => setActiveImage(i)} className={`h-16 w-16 overflow-hidden rounded-lg border-2 ${activeImage === i ? "border-primary-500" : "border-transparent"}`}>
-                <img src={img} alt="" className="h-full w-full object-cover" />
+                <img src={img} alt={`${product.title} view ${i + 1}`} className="h-full w-full object-cover" />
               </button>
             ))}
           </div>

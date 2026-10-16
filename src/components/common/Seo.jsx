@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 
-export const SITE_URL = "https://jamsmarttech.com";
+export const SITE_URL = "https://www.jamsmarttech.com";
 
 const pageSeo = {
   "/": {
@@ -65,6 +65,26 @@ const pageSeo = {
       description: "Trouvez les réponses sur les réparations, rendez-vous, garanties, délais et produits JAM Smart Tech.",
     },
   },
+  "/privacy-policy": {
+    en: {
+      title: "Privacy Policy | JAM Smart Tech",
+      description: "Read the JAM Smart Tech privacy policy and learn how customer, account, repair and order information is handled.",
+    },
+    fr: {
+      title: "Politique de confidentialité | JAM Smart Tech",
+      description: "Consultez la politique de confidentialité de JAM Smart Tech et la gestion de vos données client.",
+    },
+  },
+  "/terms": {
+    en: {
+      title: "Terms and Conditions | JAM Smart Tech",
+      description: "Review the terms and conditions for JAM Smart Tech repair services, products, orders and payments.",
+    },
+    fr: {
+      title: "Conditions générales | JAM Smart Tech",
+      description: "Consultez les conditions générales des réparations, produits, commandes et paiements JAM Smart Tech.",
+    },
+  },
 };
 
 const noIndexPrefixes = [
@@ -91,6 +111,27 @@ const publicPathPatterns = [
   /^\/product\/[^/]+\/?$/,
   /^\/repair\/[^/]+(?:\/[^/]+){0,3}\/?$/,
 ];
+
+const titleCaseSlug = (value) => decodeURIComponent(value || "")
+  .replace(/[-_]+/g, " ")
+  .replace(/\b\w/g, (letter) => letter.toUpperCase());
+
+const getDynamicSeo = (pathname, language) => {
+  const segments = pathname.split("/").filter(Boolean);
+  if (segments[0] === "product" && segments[1]) {
+    const productName = titleCaseSlug(segments[1]);
+    return language === "fr"
+      ? { title: `${productName} | JAM Smart Tech`, description: `Découvrez ${productName} chez JAM Smart Tech.` }
+      : { title: `${productName} | JAM Smart Tech`, description: `Discover ${productName} at JAM Smart Tech.` };
+  }
+  if (segments[0] === "repair" && segments[1]) {
+    const subject = titleCaseSlug(segments.length >= 4 ? segments[3] : segments[segments.length - 1]);
+    return language === "fr"
+      ? { title: `Réparation ${subject} | JAM Smart Tech`, description: `Réparation professionnelle de ${subject} chez JAM Smart Tech.` }
+      : { title: `${subject} Repair Services | JAM Smart Tech`, description: `Professional ${subject.toLowerCase()} repair services from JAM Smart Tech.` };
+  }
+  return pageSeo["/repair"][language];
+};
 
 const getMeta = (name, attribute = "name") =>
   document.head.querySelector(`meta[${attribute}="${name}"]`);
@@ -126,7 +167,7 @@ const Seo = ({ title: titleOverride, description: descriptionOverride, type = "w
     const normalizedPath = pathname !== "/" ? pathname.replace(/\/$/, "") : "/";
     const isNoIndex = noIndexPrefixes.some((prefix) => normalizedPath === prefix || normalizedPath.startsWith(`${prefix}/`));
     const isKnownPublicPath = publicPathPatterns.some((pattern) => pattern.test(normalizedPath));
-    const seo = pageSeo[normalizedPath]?.[language] || pageSeo["/repair"][language];
+    const seo = pageSeo[normalizedPath]?.[language] || getDynamicSeo(normalizedPath, language);
     const title = titleOverride || seo.title;
     const description = descriptionOverride || seo.description;
     const canonical = `${SITE_URL}${normalizedPath === "/" ? "/" : normalizedPath}`;
@@ -139,11 +180,11 @@ const Seo = ({ title: titleOverride, description: descriptionOverride, type = "w
     setMeta("og:description", description, "property");
     setMeta("og:type", type, "property");
     setMeta("og:url", canonical, "property");
-    if (image) setMeta("og:image", image, "property");
+    setMeta("og:image", image || `${SITE_URL}/icon-192.png`, "property");
     setMeta("twitter:card", "summary_large_image");
     setMeta("twitter:title", title);
     setMeta("twitter:description", description);
-    if (image) setMeta("twitter:image", image);
+    setMeta("twitter:image", image || `${SITE_URL}/icon-192.png`);
     setLink("canonical", canonical);
 
     let schema = document.head.querySelector('script[data-jam-seo="organization"]');
