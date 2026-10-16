@@ -16,4 +16,4 @@ Disallow: /repair/booking
 Disallow: /repair/manual-quote
 Disallow: /repair/booking-success
 
-Sitemap: https://www.jamsmarttech.com/sitemap.xml
+Sitemap: https://jamsmarttech.com/sitemap.xml

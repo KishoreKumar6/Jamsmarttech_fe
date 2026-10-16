@@ -12,7 +12,7 @@ import ErrorState from "../../components/common/ErrorState.jsx";
 import StarRating from "../../components/common/StarRating.jsx";
 import PriceTag, { formatPrice } from "../../components/common/PriceTag.jsx";
 import ProductCard from "../../components/ecommerce/ProductCard.jsx";
-import Seo from "../../components/common/Seo.jsx";
+import Seo, { SITE_URL } from "../../components/common/Seo.jsx";
 
 const ProductDetails = () => {
   const { t } = useTranslation("shop");
@@ -104,7 +104,7 @@ const ProductDetails = () => {
     ? (selectedVariant.discountPrice && selectedVariant.discountPrice < selectedVariant.price ? selectedVariant.discountPrice : selectedVariant.price)
     : (product.salePrice && product.salePrice < product.regularPrice ? product.salePrice : product.regularPrice);
   const images = selectedVariant?.images?.length ? selectedVariant.images : product.images;
-  const seoImage = images?.[0] || `${window.location.origin}/icon-192.png`;
+  const seoImage = images?.[0] || `${SITE_URL}/icon-192.png`;
   const seoPrice = Number(activePrice || 0);
   const productDescription = product.shortDescription || product.description || `${product.title} from JAM Smart Tech.`;
 
@@ -203,7 +203,7 @@ const ProductDetails = () => {
           brand: product.brand?.name ? { "@type": "Brand", name: product.brand.name } : undefined,
           offers: {
             "@type": "Offer",
-            url: `${window.location.origin}/product/${slug}`,
+            url: `${SITE_URL}/product/${slug}`,
             priceCurrency: product.currency || "EUR",
             price: seoPrice.toFixed(2),
             availability: activeStock > 0 ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",

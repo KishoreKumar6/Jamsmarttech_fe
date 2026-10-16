@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 
-const SITE_URL = "https://www.jamsmarttech.com";
+export const SITE_URL = "https://jamsmarttech.com";
 
 const pageSeo = {
   "/": {
@@ -85,6 +85,13 @@ const noIndexPrefixes = [
   "/repair/booking-success",
 ];
 
+const publicPathPatterns = [
+  /^\/$/,
+  /^\/(repair|shop|about|contact|faq|privacy-policy|terms)\/?$/,
+  /^\/product\/[^/]+\/?$/,
+  /^\/repair\/[^/]+(?:\/[^/]+){0,3}\/?$/,
+];
+
 const getMeta = (name, attribute = "name") =>
   document.head.querySelector(`meta[${attribute}="${name}"]`);
 
@@ -118,15 +125,16 @@ const Seo = ({ title: titleOverride, description: descriptionOverride, type = "w
   useEffect(() => {
     const normalizedPath = pathname !== "/" ? pathname.replace(/\/$/, "") : "/";
     const isNoIndex = noIndexPrefixes.some((prefix) => normalizedPath === prefix || normalizedPath.startsWith(`${prefix}/`));
+    const isKnownPublicPath = publicPathPatterns.some((pattern) => pattern.test(normalizedPath));
     const seo = pageSeo[normalizedPath]?.[language] || pageSeo["/repair"][language];
     const title = titleOverride || seo.title;
     const description = descriptionOverride || seo.description;
     const canonical = `${SITE_URL}${normalizedPath === "/" ? "/" : normalizedPath}`;
 
-    document.title = isNoIndex ? "JAM Smart Tech" : title;
+    document.title = isNoIndex || !isKnownPublicPath ? "JAM Smart Tech" : title;
     document.documentElement.lang = language;
     setMeta("description", description);
-    setMeta("robots", isNoIndex ? "noindex, nofollow" : "index, follow");
+    setMeta("robots", isNoIndex || !isKnownPublicPath ? "noindex, nofollow" : "index, follow");
     setMeta("og:title", title, "property");
     setMeta("og:description", description, "property");
     setMeta("og:type", type, "property");
@@ -195,6 +203,14 @@ const Seo = ({ title: titleOverride, description: descriptionOverride, type = "w
           "@type": "BreadcrumbList",
           itemListElement: breadcrumbs,
         },
+        ...(normalizedPath === "/repair" ? [{
+          "@type": "Service",
+          "@id": `${canonical}#service`,
+          name: language === "fr" ? "Services de réparation d'appareils" : "Device repair services",
+          serviceType: language === "fr" ? "Réparation de téléphones, tablettes, ordinateurs et consoles" : "Phone, tablet, computer and gaming device repair",
+          provider: { "@id": `${SITE_URL}/#organization` },
+          url: canonical,
+        }] : []),
         ...(structuredData ? [{ ...structuredData, "@id": `${canonical}#${structuredData["@type"] || "entity"}` }] : []),
       ],
     });
