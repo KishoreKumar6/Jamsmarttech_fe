@@ -22,15 +22,20 @@ const CURRENCIES = [
 
 const emptyForm = {
   title: "", category: "", brand: "", images: [], shortDescription: "", description: "",
+  condition: "", grade: "", gradeDefinition: "", conditionDetails: "", gradeDescription: "", gradeFeatures: "",
+  gradeDescriptionA: "", gradeDescriptionB: "", gradeDescriptionC: "",
   regularPrice: "", salePrice: "", stock: "", currency: "EUR", warranty: "", deliveryEstimate: "",
   isFeatured: false, isBestSeller: false, isActive: true,
   frTitle: "", frShortDescription: "", frDescription: "", frWarranty: "",
+  frConditionDetails: "", frGradeDescription: "", frGradeFeatures: "",
+  frGradeDescriptionA: "", frGradeDescriptionB: "", frGradeDescriptionC: "",
 };
 
 const ProductsAdmin = () => {
   const { t } = useTranslation("admin");
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
+  const [grades, setGrades] = useState([]);
   const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState(null);
@@ -41,9 +46,14 @@ const ProductsAdmin = () => {
   const load = async () => {
     setLoading(true);
     try {
-      const [pRes, cRes] = await Promise.all([api.get("/products", { params: { limit: 100, active: false } }), api.get("/categories", { params: { active: false } })]);
+      const [pRes, cRes, gRes] = await Promise.all([
+        api.get("/products", { params: { limit: 100, active: false } }),
+        api.get("/categories", { params: { active: false } }),
+        api.get("/grades", { params: { active: false } }),
+      ]);
       setProducts(pRes.data.data);
       setCategories(cRes.data.data);
+      setGrades(gRes.data.data || []);
     } catch (err) {
       showToast(t("products.toastLoadFailed"), "error");
     } finally {
@@ -64,10 +74,21 @@ const ProductsAdmin = () => {
       ...emptyForm, ...p,
       images: p.images || [],
       category: p.category?._id || p.category || "",
+      gradeDefinition: p.gradeDefinition?._id || p.gradeDefinition || "",
       frTitle: p.translations?.fr?.title || "",
       frShortDescription: p.translations?.fr?.shortDescription || "",
       frDescription: p.translations?.fr?.description || "",
       frWarranty: p.translations?.fr?.warranty || "",
+      gradeFeatures: Array.isArray(p.gradeFeatures) ? p.gradeFeatures.join("\n") : (p.gradeFeatures || ""),
+      frGradeFeatures: Array.isArray(p.translations?.fr?.gradeFeatures) ? p.translations.fr.gradeFeatures.join("\n") : (p.translations?.fr?.gradeFeatures || ""),
+      frConditionDetails: p.translations?.fr?.conditionDetails || "",
+      frGradeDescription: p.translations?.fr?.gradeDescription || "",
+      gradeDescriptionA: p.gradeDescriptions?.A || "",
+      gradeDescriptionB: p.gradeDescriptions?.B || "",
+      gradeDescriptionC: p.gradeDescriptions?.C || "",
+      frGradeDescriptionA: p.translations?.fr?.gradeDescriptions?.A || "",
+      frGradeDescriptionB: p.translations?.fr?.gradeDescriptions?.B || "",
+      frGradeDescriptionC: p.translations?.fr?.gradeDescriptions?.C || "",
     });
     setEditing(p);
     setModalOpen(true);
@@ -77,9 +98,16 @@ const ProductsAdmin = () => {
     e.preventDefault();
     setSaving(true);
     try {
-      const { frTitle, frShortDescription, frDescription, frWarranty, ...rest } = form;
+      const { frTitle, frShortDescription, frDescription, frWarranty, frConditionDetails, frGradeDescription, frGradeFeatures, frGradeDescriptionA, frGradeDescriptionB, frGradeDescriptionC, ...rest } = form;
+      const frenchGradeFeatures = String(frGradeFeatures || "").split("\n").map((item) => item.trim()).filter(Boolean);
       const payload = {
         ...rest,
+        gradeFeatures: String(form.gradeFeatures || "").split("\n").map((item) => item.trim()).filter(Boolean),
+        gradeDescriptions: {
+          A: form.gradeDescriptionA,
+          B: form.gradeDescriptionB,
+          C: form.gradeDescriptionC,
+        },
         images: form.images,
         translations: {
           fr: {
@@ -87,9 +115,23 @@ const ProductsAdmin = () => {
             shortDescription: frShortDescription,
             description: frDescription,
             warranty: frWarranty,
+            conditionDetails: frConditionDetails,
+            gradeDescription: frGradeDescription,
+            ...(frenchGradeFeatures.length > 0 ? { gradeFeatures: frenchGradeFeatures } : {}),
+            gradeDescriptions: {
+              A: frGradeDescriptionA,
+              B: frGradeDescriptionB,
+              C: frGradeDescriptionC,
+            },
           },
         },
       };
+      const selectedGrade = grades.find((item) => item._id === form.gradeDefinition);
+      if (selectedGrade) {
+        payload.grade = selectedGrade.code;
+        payload.condition = selectedGrade.condition || "";
+        payload.gradeDefinition = selectedGrade._id;
+      }
       if (editing) {
         await crud.update("products", editing._id, payload);
         showToast(t("products.toastUpdated"), "success");
@@ -159,6 +201,7 @@ const ProductsAdmin = () => {
                 <th className="px-4 py-3 font-semibold">{t("products.colCategory")}</th>
                 <th className="px-4 py-3 font-semibold">{t("products.colPrice")}</th>
                 <th className="px-4 py-3 font-semibold">{t("products.colStock")}</th>
+                <th className="px-4 py-3 font-semibold">{t("products.colGrade")}</th>
                 <th className="px-4 py-3 font-semibold">{t("products.colStatus")}</th>
                 <th className="px-4 py-3 text-right font-semibold">{t("products.colActions")}</th>
               </tr>
@@ -173,6 +216,7 @@ const ProductsAdmin = () => {
                   <td className="px-4 py-3">{p.category?.name || "—"}</td>
                   <td className="px-4 py-3">{formatPrice(p.salePrice || p.regularPrice, p.currency)}</td>
                   <td className="px-4 py-3">{p.stock}</td>
+                  <td className="px-4 py-3">{p.grade ? <span className="rounded-full bg-primary-50 px-2 py-1 text-xs font-semibold text-primary-700">{t("products.gradeValue", { grade: p.grade })}</span> : "—"}</td>
                   <td className="px-4 py-3">{p.isActive ? <span className="text-emerald-600">{t("products.active")}</span> : <span className="text-gray-400">{t("products.inactive")}</span>}</td>
                   <td className="px-4 py-3 text-right">
                     <button onClick={() => openEdit(p)} className="mr-2 rounded-lg p-1.5 text-gray-500 hover:bg-gray-100 hover:text-primary-600"><Pencil size={15} /></button>
@@ -246,6 +290,19 @@ const ProductsAdmin = () => {
               </div>
               <div><label className="label">{t("products.stockField")}</label><input type="number" className="input" value={form.stock} onChange={(e) => setForm({ ...form, stock: Number(e.target.value) })} /></div>
               <div><label className="label">{t("products.warrantyField")}</label><input className="input" value={form.warranty} onChange={(e) => setForm({ ...form, warranty: e.target.value })} /></div>
+              <div className="sm:col-span-2 mt-2 rounded-xl border border-primary-100 bg-primary-50/30 p-4">
+                <p className="mb-3 font-display text-xs font-bold uppercase tracking-wider text-primary-700">{t("products.gradeField")}</p>
+                <label className="label">{t("products.selectSavedGrade")}</label>
+                <select className="input" value={form.gradeDefinition} onChange={(e) => {
+                  const selected = grades.find((item) => item._id === e.target.value);
+                  setForm({ ...form, gradeDefinition: e.target.value, grade: selected?.code || "", condition: selected?.condition || form.condition });
+                }}>
+                  <option value="">{t("products.noGrade")}</option>
+                  {grades.map((grade) => <option key={grade._id} value={grade._id}>{grade.name} ({grade.code})</option>)}
+                </select>
+                {grades.length === 0 && <p className="mt-1 text-xs text-amber-600">{t("products.createGradesFirst")}</p>}
+                <p className="mt-2 text-xs text-gray-500">{t("products.gradeManagedHint")}</p>
+              </div>
               <p className="sm:col-span-2 pt-2 font-display text-xs font-bold uppercase tracking-wider text-gray-400">French Translation</p>
               <div className="sm:col-span-2"><label className="label">{t("products.titleFrField")}</label><input className="input" value={form.frTitle} onChange={(e) => setForm({ ...form, frTitle: e.target.value })} /></div>
               <div className="sm:col-span-2"><label className="label">{t("products.shortDescriptionFrField")}</label><input className="input" value={form.frShortDescription} onChange={(e) => setForm({ ...form, frShortDescription: e.target.value })} /></div>

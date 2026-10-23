@@ -42,6 +42,16 @@ const ProductCard = ({ product }) => {
   };
 
   const isWishlisted = user?.wishlist?.includes(product._id);
+  const selectedGrade = product.gradeDefinition || {};
+  const condition = selectedGrade.condition || product.condition;
+  const gradeCode = selectedGrade.code || product.grade;
+  const conditionLabel = condition === "To Repair"
+    ? t("product.toRepair")
+    : condition === "Refurbished"
+      ? t("product.refurbished")
+      : null;
+  const gradeLabel = gradeCode ? (selectedGrade.name || t(`product.grade${gradeCode}`)) : null;
+  const hasConditionInfo = Boolean(conditionLabel || gradeLabel);
 
   return (
     <Link to={`/product/${product.slug}`} className="card group relative flex flex-col overflow-hidden">
@@ -61,6 +71,12 @@ const ProductCard = ({ product }) => {
       <div className="flex flex-1 flex-col gap-1.5 p-4">
         {product.brand && <span className="text-xs font-medium uppercase tracking-wide text-gray-400">{product.brand}</span>}
         <h3 className="line-clamp-2 font-display text-sm font-semibold text-ink-900">{product.title}</h3>
+        {hasConditionInfo && (
+          <div className="flex flex-wrap gap-1.5 pt-0.5" aria-label={t("product.conditionAndGrade")}>
+            {gradeLabel && <span className="rounded-full bg-primary-50 px-2 py-0.5 text-[11px] font-bold text-primary-700">{gradeLabel}</span>}
+            {conditionLabel && <span className="rounded-full bg-gray-100 px-2 py-0.5 text-[11px] font-medium text-gray-600">{conditionLabel}</span>}
+          </div>
+        )}
         {product.numReviews > 0 && <StarRating rating={product.rating} size={12} count={product.numReviews} />}
         <div className="mt-auto flex items-center justify-between gap-2 pt-2">
           <div className="min-w-0 flex-1">

@@ -182,6 +182,10 @@ const GenericCrudPage = ({ title, resource, fields, columns, description }) => {
     fields.forEach((f) => {
       const value = getPath(item, f.name);
       if (Array.isArray(value)) {
+        if (f.type === "textarea") {
+          initial[f.name] = value.join("\n");
+          return;
+        }
         // API list endpoints may populate a relation; controls need their IDs.
         initial[f.name] = value.map((v) => (typeof v === "string" ? v : v?._id));
       } else {

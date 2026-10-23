@@ -60,6 +60,7 @@ const VariantsAdmin = lazy(() => import("./admin/pages/VariantsAdmin.jsx"));
 const RepairServicesAdmin = lazy(() => import("./admin/pages/RepairServicesAdmin.jsx"));
 const BookingsAdmin = lazy(() => import("./admin/pages/BookingsAdmin.jsx"));
 const ProductsAdmin = lazy(() => import("./admin/pages/ProductsAdmin.jsx"));
+const GradesAdmin = lazy(() => import("./admin/pages/GradesAdmin.jsx"));
 const CategoriesAdmin = lazy(() => import("./admin/pages/CategoriesAdmin.jsx"));
 const OrdersAdmin = lazy(() => import("./admin/pages/OrdersAdmin.jsx"));
 const CustomersAdmin = lazy(() => import("./admin/pages/CustomersAdmin.jsx"));
@@ -133,6 +134,7 @@ function App() {
           <Route path="repair-services" element={<RepairServicesAdmin />} />
           <Route path="bookings" element={<BookingsAdmin />} />
           <Route path="products" element={<ProductsAdmin />} />
+          <Route path="grades" element={<GradesAdmin />} />
           <Route path="categories" element={<CategoriesAdmin />} />
           <Route path="orders" element={<OrdersAdmin />} />
           <Route path="customers" element={<CustomersAdmin />} />

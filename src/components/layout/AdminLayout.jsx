@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { NavLink, Outlet, Link, useNavigate, useLocation } from "react-router-dom";
 import {
   LayoutDashboard, Smartphone, Tag, Layers, SlidersHorizontal, Wrench,
-  ClipboardList, ShoppingBag, FolderTree, Package, Users, Ticket, Star, CreditCard, Settings,
+  ClipboardList, ShoppingBag, FolderTree, Package, Users, Ticket, Star, CreditCard, Settings, Award,
   Menu, X, ArrowLeft
 } from "lucide-react";
 import LanguageSwitcher from "../common/LanguageSwitcher.jsx";
@@ -27,6 +27,7 @@ const groups = [
     title: "E-Commerce",
     items: [
       { to: "/admin/products", label: "Products", icon: ShoppingBag },
+      { to: "/admin/grades", label: "Grades", icon: Award },
       { to: "/admin/categories", label: "Categories", icon: FolderTree },
       { to: "/admin/orders", label: "Orders", icon: Package },
       { to: "/admin/coupons", label: "Coupons", icon: Ticket },

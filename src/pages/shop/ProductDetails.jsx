@@ -97,7 +97,7 @@ const ProductDetails = () => {
   if (loading) return <Loader full />;
   if (error) return <div className="container-px section-y mx-auto max-w-3xl"><ErrorState message={error} /></div>;
 
-  const { product, variants, related } = data;
+  const { product, variants, related, grades = [] } = data;
   const relatedProducts = related?.slice(0, 4) || [];
   const activeStock = selectedVariant ? selectedVariant.stock : product.stock;
   const activePrice = selectedVariant
@@ -186,6 +186,22 @@ const ProductDetails = () => {
   const distribution = reviewSummary?.distribution || {};
   const ratingRows = [5, 4, 3, 2, 1];
   const visibleTotal = reviews.length;
+  const selectedGrade = product.gradeDefinition || {};
+  const gradeMap = Object.fromEntries(grades.map((item) => [item.code, item]));
+  const effectiveGrade = selectedGrade.code || product.grade;
+  const effectiveCondition = selectedGrade.condition || product.condition;
+  const effectiveConditionDetails = product.conditionDetails;
+  const effectiveFeatures = selectedGrade.features?.length ? selectedGrade.features : product.gradeFeatures;
+  const hasGradeDescriptions = Object.values(product.gradeDescriptions || {}).some(Boolean) || grades.length > 0;
+  const hasConditionInfo = Boolean(effectiveCondition || effectiveGrade || effectiveConditionDetails || product.gradeDescription || effectiveFeatures?.length || hasGradeDescriptions);
+  const conditionLabel = effectiveCondition === "To Repair"
+    ? t("product.toRepair")
+    : effectiveCondition === "Refurbished"
+      ? t("product.refurbished")
+      : null;
+  const gradeLabel = effectiveGrade ? (selectedGrade.name || t(`product.grade${effectiveGrade}`)) : null;
+  const getGradeDescription = (grade) => gradeMap[grade]?.description || product.gradeDescriptions?.[grade] || t(`product.gradeComparison.${grade.toLowerCase()}`);
+  const selectedGradeDescription = product.gradeDescription || selectedGrade.description || (effectiveGrade ? getGradeDescription(effectiveGrade) : "");
 
   return (
     <div className="container-px section-y mx-auto max-w-6xl">
@@ -273,6 +289,7 @@ const ProductDetails = () => {
           </div>
 
           {product.shortDescription && <p className="mt-6 text-sm text-gray-600">{product.shortDescription}</p>}
+
         </div>
       </div>
 
@@ -280,6 +297,54 @@ const ProductDetails = () => {
         <div className="lg:col-span-2">
           <h2 className="mb-3 font-display text-xl font-bold">{t("product.description")}</h2>
           <p className="text-sm leading-relaxed text-gray-600">{product.description}</p>
+
+          {hasConditionInfo && (
+            <section className="mt-6 rounded-2xl border border-primary-100 bg-primary-50/40 p-4 sm:p-5" aria-labelledby="product-condition-heading">
+              <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
+                <h2 id="product-condition-heading" className="font-display text-lg font-bold text-ink-900">{t("product.conditionAndGrade")}</h2>
+                <div className="flex flex-wrap gap-2">
+                  {conditionLabel && <span className="rounded-full bg-white px-3 py-1 text-xs font-semibold text-primary-700 shadow-sm">{conditionLabel}</span>}
+                  {gradeLabel && <span className="rounded-full bg-primary-600 px-3 py-1 text-xs font-semibold text-white shadow-sm">{gradeLabel}</span>}
+                </div>
+              </div>
+              {effectiveConditionDetails && <p className="text-sm leading-relaxed text-gray-600">{effectiveConditionDetails}</p>}
+              {selectedGradeDescription && (
+                <div className="mt-3">
+                  <p className="text-xs font-bold uppercase tracking-wide text-gray-500">{t("product.gradeDescription")}</p>
+                  <p className="mt-1 text-sm leading-relaxed text-gray-600">{selectedGradeDescription}</p>
+                </div>
+              )}
+              {effectiveFeatures?.length > 0 && (
+                <div className="mt-3">
+                  <p className="text-xs font-bold uppercase tracking-wide text-gray-500">{t("product.conditionFeatures")}</p>
+                  <ul className="mt-2 grid gap-1.5 text-sm text-gray-600 sm:grid-cols-2">
+                    {effectiveFeatures.map((feature, index) => <li key={`${feature}-${index}`} className="flex items-start gap-2"><span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-primary-500" />{feature}</li>)}
+                  </ul>
+                </div>
+              )}
+            </section>
+          )}
+
+          {hasConditionInfo && (
+            <section className="mt-8" aria-labelledby="grade-comparison-heading">
+              <h2 id="grade-comparison-heading" className="mb-2 font-display text-xl font-bold">{t("product.gradeComparison.title")}</h2>
+              <p className="mb-4 text-sm text-gray-500">{t("product.gradeComparison.intro")}</p>
+              <div className="grid gap-3 md:grid-cols-3">
+                {["A", "B", "C"].map((grade) => (
+                  <article
+                    key={grade}
+                      className={`rounded-2xl border p-4 ${effectiveGrade === grade ? "border-primary-400 bg-primary-50/60 shadow-sm" : "border-gray-100 bg-white"}`}
+                  >
+                    <div className="mb-2 flex items-center justify-between gap-2">
+                      <h3 className="font-display text-base font-bold text-ink-900">{t(`product.grade${grade}`)}</h3>
+                      {effectiveGrade === grade && <span className="rounded-full bg-primary-600 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white">{t("product.currentGrade")}</span>}
+                    </div>
+                  <p className="text-sm leading-relaxed text-gray-600">{getGradeDescription(grade)}</p>
+                  </article>
+                ))}
+              </div>
+            </section>
+          )}
 
           {product.specifications?.length > 0 && (
             <div className="mt-8">
